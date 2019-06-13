@@ -105,9 +105,11 @@ async function signin(page, profile, email, password, awt, target, today) {
 async function monitor(page, selector, callback, prevValue) {
     await page.goto('https://www.amazon.com/gp/your-account/order-history?ref_=ya_d_c_yo', { waitUntil: 'networkidle0' });
     let newVal;
+    let flag = 0;
     try {
         newVal = await page.$eval(selector, e => e.innerHTML);
     } catch (error) {
+        flag = 1;
         newVal = await page.$eval('#controlsContainer > div.a-row.a-spacing-base.top-controls > label > span', e => e.innerHTML);
     }
     const a = await parseInt(newVal.replace(/[a-z.]/g, ''))
@@ -118,7 +120,12 @@ async function monitor(page, selector, callback, prevValue) {
     /* add some delay */
     await new Promise(_ => setTimeout(_, 180000))
     /* call recursively */
-    await monitor(page, selector, callback, newVal);
+    if (flag == 0) {
+        await monitor(page, selector, callback, newVal);
+    } else {
+        await monitor(page, newVal, callback, newVal);
+    }
+
 }
 
 async function removeaccount(email) {
